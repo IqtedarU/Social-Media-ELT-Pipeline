@@ -1,18 +1,18 @@
-# Social-Media-ELT-Pipeline
+## Social-Media-ELT-Pipeline
 
 This is currently in progress and I wrote the timeline, but not the dates since I'm still figuring out my schedule and time it takes to compelete the tasks. I hope for this project to be a more practical pipeline that follows logic and reasoning the regular Data Engineers use.
 
-# Pipeline Purpose: What is the primary goal of your pipeline? Is it for strategy development, risk management, backtesting, or a combination of these?
+### Pipeline Purpose: What is the primary goal of your pipeline? Is it for strategy development, risk management, backtesting, or a combination of these?
 
 This pipeline is based on extracting information from social media in real time to get a idea of trending topics, get sentiment of certain topics, and detect spam from these platforms. The main goal of this is to make a system which updates data in real time for use in querying.
 
 Python is used for everything just to test everything out. If using real time Java should be used since it has better performance and latency compared to Python.
 
-# Data Sources: What kind of data are you using (e.g., market data, fundamental data, alternative data)? Are your data sources reliable and consistent?
+### Data Sources: What kind of data are you using (e.g., market data, fundamental data, alternative data)? Are your data sources reliable and consistent?
 
 Currently to simplify pipelines and focus more on checking if this system works as expected, I will use reddit data using the PRAW API to fetch data. This is reliable and consistent, but due to rate limits that I currently have, cause an issue with not making this fully real time right now. 
 
-# Data Cleaning and Processing: How are you handling data cleaning, preprocessing, and feature engineering? Are there any potential data quality issues or biases?
+### Data Cleaning and Processing: How are you handling data cleaning, preprocessing, and feature engineering? Are there any potential data quality issues or biases?
 
 Currently data quality issues might exist due to taking any data that is put on reddit and scraped through the api. To check quality would mean to go more in depth in spam detection algorithms and other algorithms to check quality, but is not the main focus of this project.
 
@@ -22,7 +22,7 @@ Data quality can cause bias. The other issue is what subreddits I scrape. Leavin
 
 The data itself will also have a timestamp on when it was added to the Hbase. This is different from kafka logging because the data will constantly be updated. Kafka can log its updates, but each comment might come in Hbase at a different time. 
 
-# Model Development: What types of models are you using (e.g., statistical models, machine learning algorithms)? How are you evaluating model performance and selecting the best candidates?
+### Model Development: What types of models are you using (e.g., statistical models, machine learning algorithms)? How are you evaluating model performance and selecting the best candidates?
 
 The main part of this pipeline is to ensure real time updates and availability of these updates to use. As data comes in constantly, we are introduced to new text data in these posts. To see real-time analysis more, I thought it would be good to use sentiment analysis algorithms and add a field to the text data as a feature in the file to show how fast it's being updated and how  fast transformations are happening.
 
@@ -39,8 +39,8 @@ Errors in changes in API or scripts(beautifulsoup scraping): This has occurred t
 
 API Limits: This is runned in batches to make sure that I have API limits met. If you have real-time through paying for access, you should still have error implementation in logging implemented. 
 
-# Technology Stack: What tools and technologies are you using for data ingestion, processing, model development, and deployment?
-# The overall technologies in this pipeline is:
+### Technology Stack: What tools and technologies are you using for data ingestion, processing, model development, and deployment?
+### The overall technologies in this pipeline is:
 
 
 Apache HBase: Apache HBase is good for read/write in real time which makes it good for social media data. For reddit data, it is good in updating post files for more comments, replies and other metadata. It’s also very good with scaling, managing large datasets, and interacting with the Hadoop ecosystem. 
@@ -83,38 +83,54 @@ Batch/Streaming: Hive is good for updates but not real time. In cases with batch
 ETL/ELT: I use an ELT because the raw data loaded in from reddit or other platforms can be used for other purposes. You might have other cases than querying text data that need to be ran or analyzed so loading first and transforming(has some latency) is better. ELT is good in cases where dependencies need to be checked. This is better in cases like Hive where schemas are predefined and need to be checked before loading it in.
 
 
-# Scalability: How well does your pipeline scale to handle large datasets and frequent updates?
+### Scalability: How well does your pipeline scale to handle large datasets and frequent updates?
 
 This scales very well because of HBase,Hive, and HDFS and data lakes being very good with scaling. They use horizontal scaling so adding more nodes is needed if you get more data.
 
-# Automation: Have you considered automating any parts of the pipeline to improve efficiency and reduce manual errors?
+### Automation: Have you considered automating any parts of the pipeline to improve efficiency and reduce manual errors?
 
 Most of this is automated using scripts with logging and nifi used to track errors
 
 
-# Documentation: How well is your pipeline documented, including code, data sources, and methodologies?
+### Documentation: How well is your pipeline documented, including code, data sources, and methodologies?
 
 This is current documentation and plan with code being made and documented later. This is very important considering how complex this pipeline is.
 
-# Current Plan:
+### Current Plan:
 
 Download all required technologies.
+
 Make Scripts to get incoming Data with kafka to check logging, data upload, and error checking
+
 Make Script to transition old log data to s3
+
 Make Scripts for Data Transformations(preprocessing) through kafka 
+
 Make Scripts for ML related feature engineering through Spark Streaming
+
 Make a Solr indexing script for data in HBase
+
 Make Solr Query scripts and test them
+
 Use Apache Nifi to track pipeline
-Make Script to transition old social media data to Hive. 
+
+Make Script to transition old social media data to Hive.
+
 Make Hive Query Scripts
 
 
-# Future considerations:
+
+### Future considerations:
 
 Better scripts in Java(speed)
+
 More Api to add more data
+
 More Solr Queries
+
 More ML/Transformations in data for analysis.
+
 Performance Testing
+
 Subreddit data ingestion(rate limit not considered)
+
