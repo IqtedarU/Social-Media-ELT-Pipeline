@@ -1,0 +1,121 @@
+import praw
+from config import reddit_config
+
+# Initialize the Reddit instance using PRAW
+reddit = praw.Reddit(
+    client_id=reddit_config["client_id"],
+    client_secret=reddit_config["client_secret"],
+    user_agent=reddit_config["user_agent"]
+)
+
+
+def scrape_subreddit(subreddit_name, limit=10, sort_by="hot"):
+    subreddit = reddit.subreddit(subreddit_name)
+
+    # Sorting options: hot, new, top, etc.
+    if sort_by == "hot":
+        posts = subreddit.hot(limit=limit)
+    elif sort_by == "new":
+        posts = subreddit.new(limit=limit)
+    elif sort_by == "top":
+        posts = subreddit.top(limit=limit)
+    else:
+        posts = subreddit.hot(limit=limit)  # Default to 'hot' if sorting is not recognized
+
+    posts_data = []
+    for post in posts:
+        # Fetch post metadata
+        post_data = {
+            "post_id": post.id,
+            "title": post.title,
+            "author": str(post.author),
+            "score": post.score,
+            "upvotes": post.ups,
+            "downvotes": post.downs,
+            "created_utc": post.created_utc,
+            "num_comments": post.num_comments,
+            "url": post.url,
+            "is_video": post.is_video,
+            "media_url": post.media["reddit_video"]["fallback_url"] if post.is_video and post.media else None,
+            "post_content": post.selftext if post.selftext != '' else None,
+            "media_type": identify_media_type(post),
+            "text_and_media": handle_text_and_media(post)
+        }
+
+        # Print post data for debugging
+        print(post_data)
+
+        # Scrape the comments for the post
+        comments = scrape_comments(post)
+        post_data["comments"] = comments
+
+        posts_data.append(post_data)
+
+    return posts_data
+
+# Helper function to identify the type of media in a post (image, GIF, video)
+def identify_media_type(post):
+    if post.is_video:
+        return "video"
+    elif "gif" in post.url:
+        return "gif"
+    elif post.url.endswith((".jpg", ".jpeg", ".png")):
+        return "image"
+    else:
+        return "text" if post.selftext else "unknown"
+
+# Helper function to handle posts with both text and media (e.g., video + caption)
+def handle_text_and_media(post):
+    # If the post has text and media (video, GIF, image), return both
+    return {
+        "text": post.selftext if post.selftext else None,
+        "media_url": post.media["reddit_video"]["fallback_url"] if post.is_video and post.media else post.url
+    }
+
+# Scraping comments, including handling replies and media
+def scrape_comments(post):
+    post.comments.replace_more(limit=0)  # Fetch all comments, including nested ones
+    comments_data = []
+    for comment in post.comments.list():
+        comment_data = {
+            'id': comment.id,
+            'author': str(comment.author),
+            'body': comment.body,
+            'upvotes': comment.score,
+            'is_reply': comment.parent_id != post.id,  # If parent_id is not the post's ID, it's a reply
+            'parent_id': comment.parent_id,  # Link to parent comment or post
+            'created_utc': comment.created_utc,
+            'media_urls': extract_media_links(comment.body),  # Capture media links from comment text
+            'text_and_media': handle_comment_text_and_media(comment.body)  # Extract both text and media from the comment
+        }
+        comments_data.append(comment_data)
+    return comments_data
+
+# Extract media links (images/videos) from comment body
+def extract_media_links(text):
+    import re
+    media_patterns = r'(https?://\S+\.(?:jpg|jpeg|gif|png|mp4|webm))'
+    media_links = re.findall(media_patterns, text)
+    return media_links if media_links else None
+
+# Handle both text and media in a comment
+def handle_comment_text_and_media(body):
+    # If the comment contains both media (links) and text, return both
+    media_links = extract_media_links(body)
+    return {
+        "text": body,
+        "media_urls": media_links
+    } if media_links else {"text": body}
+
+# Example usage:
+if __name__ == "__main__":
+    subreddit_name = reddit_config["subreddit"]
+    limit = reddit_config["limit"]
+    sort_by = reddit_config["sort_by"]
+
+    print(f"Scraping {limit} posts from r/{subreddit_name} sorted by {sort_by}...")
+    posts_data = scrape_subreddit(subreddit_name, limit=limit, sort_by=sort_by)
+
+    # Printing the result for now (could later be sent to Kafka, HBase, etc.)
+    for post in posts_data:
+        print(post)
